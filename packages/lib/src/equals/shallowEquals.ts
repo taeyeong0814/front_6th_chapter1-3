@@ -1,5 +1,5 @@
 // shallowEquals 함수는 두 값의 얕은 비교를 수행합니다.
-export function shallowEquals(objA: Record<string, unknown>, objB: Record<string, unknown>): boolean {
+export function shallowEquals(objA: unknown, objB: unknown): boolean {
   // 1. 두 값이 정확히 같은지 확인 (참조가 같은 경우)
   if (objA === objB) return true;
 
@@ -13,7 +13,7 @@ export function shallowEquals(objA: Record<string, unknown>, objB: Record<string
 
   // 4. 모든 키에 대해 얕은 비교 수행
   for (const key of keysA) {
-    if (!keysB.includes(key) || objA[key] !== objB[key]) {
+    if (!keysB.includes(key) || (objA as Record<string, unknown>)[key] !== (objB as Record<string, unknown>)[key]) {
       return false;
     }
   }
