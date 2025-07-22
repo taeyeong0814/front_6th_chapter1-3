@@ -1,6 +1,7 @@
 import { useRef, type DependencyList } from "react";
 import { shallowEquals } from "../equals";
 
+// useMemo 훅은 계산 비용이 높은 값을 메모이제이션합니다.
 export function useMemo<T>(factory: () => T, _deps: DependencyList, _equals = shallowEquals): T {
   // 직접 작성한 useRef를 통해서 만들어보세요! 이게 제일 중요합니다.
 
