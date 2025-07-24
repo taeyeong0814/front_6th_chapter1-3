@@ -1,10 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, memo, type PropsWithChildren, useContext, useMemo, useReducer } from "react";
+import { createContext, memo, type PropsWithChildren, useContext, useReducer } from "react";
 import { createPortal } from "react-dom";
 import { Toast } from "./Toast";
 import { createActions, initialState, toastReducer, type ToastType } from "./toastReducer";
 import { debounce } from "../../utils";
-import { useCallback } from "@hanghae-plus/lib/src/hooks";
+import { useMemo, useAutoCallback } from "@hanghae-plus/lib/src/hooks";
 
 type ShowToast = (message: string, type: ToastType) => void;
 type Hide = () => void;
@@ -30,18 +30,17 @@ export const useToastCommand = () => useContext(ToastCommandContext);
 
 export const ToastProvider = memo(({ children }: PropsWithChildren) => {
   const [state, dispatch] = useReducer(toastReducer, initialState);
-  const { show, hide } = createActions(dispatch);
+  // show, hide를 useAutoCallback으로 메모이제이션
+  const show = useAutoCallback((message: string, type: ToastType) => createActions(dispatch).show(message, type));
+  const hide = useAutoCallback(() => createActions(dispatch).hide());
   const visible = state.message !== "";
 
   const hideAfter = useMemo(() => debounce(hide, DEFAULT_DELAY), [hide]);
 
-  const showWithHide: ShowToast = useCallback(
-    (...args) => {
-      show(...args);
-      hideAfter();
-    },
-    [show, hideAfter],
-  );
+  const showWithHide: ShowToast = useAutoCallback((...args) => {
+    show(...args);
+    hideAfter();
+  });
 
   // 상태와 명령을 각각 분리하여 context value 생성
   const stateValue = useMemo(
@@ -61,11 +60,9 @@ export const ToastProvider = memo(({ children }: PropsWithChildren) => {
   );
 
   return (
-    <>
+    <ToastCommandContext value={commandValue}>
       {children}
-      <ToastCommandContext value={commandValue}>
-        <ToastStateContext value={stateValue}>{visible && createPortal(<Toast />, document.body)}</ToastStateContext>
-      </ToastCommandContext>
-    </>
+      <ToastStateContext value={stateValue}>{visible && createPortal(<Toast />, document.body)}</ToastStateContext>
+    </ToastCommandContext>
   );
 });
